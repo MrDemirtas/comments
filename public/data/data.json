@@ -1,5 +1,6 @@
 [
     {
+        "id": "e64fcd02-7d3c-4c0f-b2f1-3873bc5a7cba",
         "name": "Noah Pierre",
         "time": "58 minutes ago",
         "comment": "I'm a bit unclear about how condensation forms in the water cycle. Can someone break it down?",
@@ -7,6 +8,7 @@
         "dislikes": 3,
         "replies": [
             {
+                "id": "f8b63c07-1c64-45f7-b582-d8008a05515e",
                 "name": "Skill Sprout",
                 "time": "8 minutes ago",
                 "comment": "Condensation happens when water vapor cools down and changes back into liquid droplets. It’s the step before precipitation. The example with the glass of ice water in the video was a great visual!",
@@ -16,6 +18,7 @@
         ]
     },
     {
+        "id": "a0ed37f3-2bbf-4a7d-becf-0c433b1ae6d2",
         "name": "Mollie Hall",
         "time": "5 hours ago",
         "comment": "I really enjoyed today’s lesson on the water cycle! The animations made the processes so much easier to grasp.",
@@ -24,6 +27,7 @@
         "replies": []
     },
     {
+        "id": "6b764f53-51a2-4d45-ae3c-ffdb032b21c7",
         "name": "Lyle Kauffman",
         "time": "1 day ago",
         "comment": "How do we measure the amount of water vapor in the air? Is it something we'll cover later?",
@@ -31,6 +35,7 @@
         "dislikes": 0,
         "replies": [
             {
+                "id": "21b06f2a-6d77-4d94-a228-e245d8cb9f9c",
                 "name": "Amanda Lowery",
                 "time": "12 hours ago",
                 "comment": "Yes, I think we'll dive deeper into that in the next module on humidity. But the short answer is: we measure it using a tool called a hygrometer.",
@@ -38,6 +43,7 @@
                 "dislikes": 1
             },
             {
+                "id": "2e15b823-9f7f-4a35-8fbc-1ecb3a61d4fd",
                 "name": "Owen Garcia",
                 "time": "2 hours ago",
                 "comment": "Exactly! The next lesson will cover humidity, and I’m excited to see how it all connects back to the water cycle.",
