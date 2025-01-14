@@ -1,5 +1,7 @@
 import { AttachSvg, BoldSvg, DissLikeSvg, EmojiSvg, ImageSvg, ItalicSvg, LikeSvg, OrderSvg, ReplySvg, UnderLineSvg } from "./Svg";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import { marked } from "marked";
 
 export default function App() {
   const [comments, setComments] = useState([]);
@@ -35,6 +37,32 @@ export default function App() {
 }
 
 function AddComment({ setComments }) {
+  const textAreaRef = useRef(null);
+  const [text, setText] = useState("");
+
+  function addTextStyle(type) {
+    
+    function convertMdSyntax(selectedText) {
+      const textStyles = {
+        strong: `**${selectedText}**`,
+        italic: `_${selectedText}_`,
+        underline: `<u>${selectedText}</u>`
+      }
+      return textStyles[type];
+    }
+
+    const textarea = textAreaRef.current;
+    const selectedText = textarea.value.substring(textarea.selectionStart, textarea.selectionEnd);
+
+    if (selectedText) {
+      const beforeText = textarea.value.substring(0, textarea.selectionStart);
+      const afterText = textarea.value.substring(textarea.selectionEnd);
+      const newText = beforeText + convertMdSyntax(selectedText) + afterText;
+
+      setText(newText);
+    }
+  };
+
   function handleOnSubmit(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -48,23 +76,23 @@ function AddComment({ setComments }) {
       dislikes: 0,
       replies: [],
     };
-    setComments((comments) => [newCommentObj, ...comments ]);
+    setComments((comments) => [newCommentObj, ...comments]);
     e.target.reset();
   }
 
   return (
     <div className="add-comment-content">
       <form onSubmit={handleOnSubmit}>
-        <textarea name="comment" required rows="2" placeholder="add comment..."></textarea>
+        <textarea ref={textAreaRef} required name="comment" value={text} onChange={(e) => setText(e.target.value)} rows="2" placeholder="add comment..."></textarea>
         <div className="comment-interactions">
           <div className="text-interactions">
-            <button type="button">
+            <button type="button" onClick={() => addTextStyle("strong")}>
               <BoldSvg />
             </button>
-            <button type="button">
+            <button type="button" onClick={() => addTextStyle("italic")}>
               <ItalicSvg />
             </button>
-            <button type="button">
+            <button type="button" onClick={() => addTextStyle("underline")}>
               <UnderLineSvg />
             </button>
           </div>
@@ -96,7 +124,7 @@ function UserComments({ id, name, time, comment, likes, dislikes, replies }) {
             <strong>{name}</strong>
             <span>{time}</span>
           </div>
-          <p className="user-comment">{comment}</p>
+          <div className="user-comment" dangerouslySetInnerHTML={{ __html: marked.parse(comment) }}  />
           <div className="comment-interactions">
             <div className="comment-like-content">
               <button>
