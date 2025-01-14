@@ -1,0 +1,60 @@
+body {
+  background-color: #d6d6d6;
+  font-family: system-ui, serif;
+}
+
+#root {
+  padding: 48px;
+}
+
+.container {
+  margin-inline: auto;
+  width: 50%;
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 16px;
+}
+
+button {
+  background-color: inherit;
+  border: none;
+  cursor: pointer;
+}
+
+.add-comment-content {
+  background: #f2f2f2;
+  padding: 24px;
+  border-radius: 8px;
+  form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 24px;
+    textarea {
+      grid-column: 1 / span 2;
+      resize: none;
+      border: none;
+      outline: none;
+      background-color: inherit;
+    }
+  }
+}
+
+.comment-interactions {
+  display: flex;
+  gap: 24px;
+}
+
+.comment-btn {
+  background-color: #e65008;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 24px;
+  justify-self: end;
+}
+
+.text-interactions,
+.visual-interactions {
+  display: flex;
+  gap: 4px;
+}
