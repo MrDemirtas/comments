@@ -14,7 +14,7 @@ export default function App() {
 
   return (
     <div className="container">
-      <AddComment />
+      <AddComment setComments={setComments} />
       <hr />
       <div className="user-comments-content">
         <div className="user-comments-header">
@@ -34,11 +34,28 @@ export default function App() {
   );
 }
 
-function AddComment() {
+function AddComment({ setComments }) {
+  function handleOnSubmit(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const formObj = Object.fromEntries(formData);
+    const newCommentObj = {
+      id: crypto.randomUUID(),
+      name: "Furkan Demirtaş",
+      time: "now",
+      comment: formObj.comment,
+      likes: 0,
+      dislikes: 0,
+      replies: [],
+    };
+    setComments((comments) => [newCommentObj, ...comments ]);
+    e.target.reset();
+  }
+
   return (
     <div className="add-comment-content">
-      <form>
-        <textarea name="comment" rows="2" placeholder="add comment..."></textarea>
+      <form onSubmit={handleOnSubmit}>
+        <textarea name="comment" required rows="2" placeholder="add comment..."></textarea>
         <div className="comment-interactions">
           <div className="text-interactions">
             <button type="button">
