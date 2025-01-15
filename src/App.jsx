@@ -16,14 +16,22 @@ export default function App() {
   });
   const [comments, setComments] = useState([]);
   const [commentReplyId, setCommentReplyId] = useState(null);
-  console.log(comments)
+
   useEffect(() => {
     async function getData() {
       const response = await fetch("/data/data.json").then((x) => x.json());
       setComments(response);
     }
-    getData();
+    if (localStorage.commentsData) {
+      setComments(JSON.parse(localStorage.getItem("commentsData")));
+    }else{
+      getData();
+    }
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("commentsData", JSON.stringify(comments));
+  }, [comments])
 
   function handleLikeBtn({ id, replyId = false }) {
     if (currentUser.likes.includes(id)) {
