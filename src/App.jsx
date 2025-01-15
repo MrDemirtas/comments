@@ -6,6 +6,8 @@ import data from '@emoji-mart/data'
 import { marked } from "marked";
 
 export default function App() {
+  const dialogRef = useRef(null);
+
   const [currentUser, setCurrentUser] = useState({
     userId: 1,
     name: "Furkan Demirtaş",
@@ -13,7 +15,8 @@ export default function App() {
     dislikes: [],
   });
   const [comments, setComments] = useState([]);
-
+  const [commentReplyId, setCommentReplyId] = useState(null);
+  console.log(comments)
   useEffect(() => {
     async function getData() {
       const response = await fetch("/data/data.json").then((x) => x.json());
@@ -103,9 +106,26 @@ export default function App() {
           </div>
         </div>
         {comments.map((x) => (
-          <UserComments key={x.id} {...x} currentUser={currentUser} setCurrentUser={setCurrentUser} setComments={setComments} handleLikeBtn={handleLikeBtn} handleDisLikeBtn={handleDisLikeBtn} />
+          <UserComments 
+            key={x.id} 
+            {...x} 
+            currentUser={currentUser} 
+            setCurrentUser={setCurrentUser} 
+            setComments={setComments}
+            handleLikeBtn={handleLikeBtn} 
+            handleDisLikeBtn={handleDisLikeBtn}
+            setCommentReplyId={setCommentReplyId}
+          />
         ))}
       </div>
+      {commentReplyId !== null && 
+        <ReplyModal 
+          dialogRef={dialogRef}
+          replyId={commentReplyId}
+          setComments={setComments}
+          setCommentReplyId={setCommentReplyId}
+          currentUser={currentUser}
+        />}
     </div>
   );
 }
@@ -197,7 +217,7 @@ function AddComment({ setComments, currentUser }) {
   );
 }
 
-function UserComments({ id, name, time, comment, likes, dislikes, replies, currentUser, handleLikeBtn, handleDisLikeBtn }) {
+function UserComments({ id, name, time, comment, likes, dislikes, replies, currentUser, handleLikeBtn, handleDisLikeBtn, setCommentReplyId }) {  
   return (
     <ul className="user-comments-body">
       <li className="comment">
@@ -211,7 +231,7 @@ function UserComments({ id, name, time, comment, likes, dislikes, replies, curre
             </strong>
             <span>{time}</span>
           </div>
-          <div className="user-comment" dangerouslySetInnerHTML={{ __html: marked.parse(comment) }} />
+          <p className="user-comment" dangerouslySetInnerHTML={{ __html: marked.parse(comment) }} />
           <div className="comment-interactions">
             <div className="comment-like-content">
               <button onClick={() => handleLikeBtn({ id: id })}>
@@ -223,7 +243,7 @@ function UserComments({ id, name, time, comment, likes, dislikes, replies, curre
                 {dislikes}
               </button>
             </div>
-            <button>
+            <button onClick={() => setCommentReplyId(id)}>
               <ReplySvg width="18px" height="18px" />
               Reply
             </button>
@@ -231,7 +251,15 @@ function UserComments({ id, name, time, comment, likes, dislikes, replies, curre
           {replies.length !== 0 && (
             <ul className="user-comments-body">
               {replies.map((x) => (
-                <UserCommentReplies key={x.id} {...x} replyToId={id} currentUser={currentUser} handleLikeBtn={handleLikeBtn} handleDisLikeBtn={handleDisLikeBtn} />
+                <UserCommentReplies 
+                  key={x.id} 
+                  {...x} 
+                  replyToId={id} 
+                  currentUser={currentUser} 
+                  handleLikeBtn={handleLikeBtn} 
+                  handleDisLikeBtn={handleDisLikeBtn}
+                  setCommentReplyId={setCommentReplyId}
+                />
               ))}
             </ul>
           )}
@@ -241,7 +269,7 @@ function UserComments({ id, name, time, comment, likes, dislikes, replies, curre
   );
 }
 
-function UserCommentReplies({ id, name, time, comment, likes, dislikes, replyToId, currentUser, handleLikeBtn, handleDisLikeBtn }) {
+function UserCommentReplies({ id, name, time, comment, likes, dislikes, replyToId, currentUser, handleLikeBtn, handleDisLikeBtn, setCommentReplyId }) {
   return (
     <li className="comment">
       <img src="https://avatars.githubusercontent.com/u/178329206?v=4" />
@@ -250,7 +278,7 @@ function UserCommentReplies({ id, name, time, comment, likes, dislikes, replyToI
           <strong>{name}</strong>
           <span>{time}</span>
         </div>
-        <p className="user-comment">{comment}</p>
+        <p className="user-comment" dangerouslySetInnerHTML={{ __html: marked.parse(comment) }} />
         <div className="comment-interactions">
           <div className="comment-like-content">
             <button onClick={() => handleLikeBtn({ id: id, replyId: replyToId })}>
@@ -262,7 +290,7 @@ function UserCommentReplies({ id, name, time, comment, likes, dislikes, replyToI
               {dislikes}
             </button>
           </div>
-          <button>
+          <button onClick={() => setCommentReplyId(replyToId)}>
             <ReplySvg width="18px" height="18px" />
             Reply
           </button>
@@ -270,4 +298,97 @@ function UserCommentReplies({ id, name, time, comment, likes, dislikes, replyToI
       </div>
     </li>
   );
+}
+
+function ReplyModal({dialogRef, replyId, setComments, setCommentReplyId, currentUser}) {
+  const textAreaRef = useRef(null);
+  const [text, setText] = useState("");
+  const [openEmoji, setOpenEmoji] = useState("");
+
+  function handleOnSubmit(e) {
+    const formData = new FormData(e.target);
+    const formObj = Object.fromEntries(formData);
+    const newReplyObj = {
+      id: crypto.randomUUID(),
+      name: currentUser.name,
+      time: "now",
+      comment: formObj.comment,
+      likes: 0,
+      dislikes: 0,
+    }
+
+    setComments(comments => {
+      comments[comments.findIndex(x => x.id === replyId)].replies.push(newReplyObj);
+      return [...comments];
+    })
+    setCommentReplyId(null)
+  }
+
+  function addTextStyle(type) {
+    function convertMdSyntax(selectedText) {
+      const textStyles = {
+        strong: `**${selectedText}**`,
+        italic: `_${selectedText}_`,
+        underline: `<u>${selectedText}</u>`,
+      };
+      return textStyles[type];
+    }
+
+    const textarea = textAreaRef.current;
+    const selectedText = textarea.value.substring(textarea.selectionStart, textarea.selectionEnd);
+
+    if (selectedText) {
+      const beforeText = textarea.value.substring(0, textarea.selectionStart);
+      const afterText = textarea.value.substring(textarea.selectionEnd);
+      const newText = beforeText + convertMdSyntax(selectedText) + afterText;
+      setText(newText);
+    }
+  }
+
+  return (
+    <dialog className="replyDialog" ref={dialogRef}>
+      <div className="add-comment-content">
+        <form onSubmit={handleOnSubmit}>
+          <textarea ref={textAreaRef} required name="comment" value={text} onChange={(e) => setText(e.target.value)} rows="2" placeholder="add comment..."></textarea>
+          <div className="comment-interactions">
+            <div className="text-interactions">
+              <button type="button" onClick={() => addTextStyle("strong")}>
+                <BoldSvg width="18px" height="18px" />
+              </button>
+              <button type="button" onClick={() => addTextStyle("italic")}>
+                <ItalicSvg width="18px" height="18px" />
+              </button>
+              <button type="button" onClick={() => addTextStyle("underline")}>
+                <UnderLineSvg width="18px" height="18px" />
+              </button>
+            </div>
+            <div className="visual-interactions">
+              <button type="button">
+                <AttachSvg width="18px" height="18px" />
+              </button>
+              <button type="button">
+                <ImageSvg width="18px" height="18px" />
+              </button>
+              <div className="emojiPicker">
+                <button type="button" className="emojiBtn" onClick={() => setOpenEmoji(!openEmoji)}>
+                  <EmojiSvg width="18px" height="18px" fillColor={openEmoji ? "#e9540a" : "#5e5e5e"} />
+                </button>
+                {openEmoji && 
+                  <Picker 
+                    data={data} 
+                    onEmojiSelect={(emoji) => setText(() => text + emoji.native)}
+                    locale={"tr"}
+                    theme={"light"}
+                  />}
+              </div>
+            </div>
+          </div>
+          <div className="btn-group">
+            <button type="button" className="cancel-btn" onClick={() => setCommentReplyId(null)}>Cancel</button>
+            <button type="submit" className="comment-btn">Submit</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+  )
 }
