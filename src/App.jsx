@@ -1,6 +1,8 @@
 import { AttachSvg, BoldSvg, DissLikeSvg, EmojiSvg, ImageSvg, ItalicSvg, LikeSvg, OrderSvg, ReplySvg, UnderLineSvg } from "./Svg";
 import { useEffect, useRef, useState } from "react";
 
+import Picker from '@emoji-mart/react'
+import data from '@emoji-mart/data'
 import { marked } from "marked";
 
 export default function App() {
@@ -33,7 +35,7 @@ export default function App() {
     } else {
       currentUser.likes = [...currentUser.likes, id];
       setCurrentUser({ ...currentUser });
-      
+
       let thisComment = null;
       if (!replyId) {
         thisComment = comments[comments.findIndex((x) => x.id === id)];
@@ -47,7 +49,7 @@ export default function App() {
         currentUser.dislikes = currentUser.dislikes.filter((x) => x !== id);
         setCurrentUser({ ...currentUser });
       }
-    
+
       thisComment.likes++;
       setComments([...comments]);
     }
@@ -66,7 +68,7 @@ export default function App() {
     } else {
       currentUser.dislikes = [...currentUser.dislikes, id];
       setCurrentUser({ ...currentUser });
-      
+
       let thisComment = null;
       if (!replyId) {
         thisComment = comments[comments.findIndex((x) => x.id === id)];
@@ -80,7 +82,7 @@ export default function App() {
         currentUser.likes = currentUser.likes.filter((x) => x !== id);
         setCurrentUser({ ...currentUser });
       }
-    
+
       thisComment.dislikes++;
       setComments([...comments]);
     }
@@ -110,7 +112,8 @@ export default function App() {
 
 function AddComment({ setComments, currentUser }) {
   const textAreaRef = useRef(null);
-  const [text, setText] = useState("");
+  const [openEmoji, setOpenEmoji] = useState(false);
+  const [text, setText] = useState(""); 
 
   function addTextStyle(type) {
     function convertMdSyntax(selectedText) {
@@ -148,6 +151,7 @@ function AddComment({ setComments, currentUser }) {
     };
     setComments((comments) => [newCommentObj, ...comments]);
     setText("");
+    setOpenEmoji(false);
   }
 
   return (
@@ -157,28 +161,37 @@ function AddComment({ setComments, currentUser }) {
         <div className="comment-interactions">
           <div className="text-interactions">
             <button type="button" onClick={() => addTextStyle("strong")}>
-              <BoldSvg />
+              <BoldSvg width="18px" height="18px" />
             </button>
             <button type="button" onClick={() => addTextStyle("italic")}>
-              <ItalicSvg />
+              <ItalicSvg width="18px" height="18px" />
             </button>
             <button type="button" onClick={() => addTextStyle("underline")}>
-              <UnderLineSvg />
+              <UnderLineSvg width="18px" height="18px" />
             </button>
           </div>
           <div className="visual-interactions">
             <button type="button">
-              <AttachSvg />
+              <AttachSvg width="18px" height="18px" />
             </button>
             <button type="button">
-              <ImageSvg />
+              <ImageSvg width="18px" height="18px" />
             </button>
-            <button type="button">
-              <EmojiSvg />
-            </button>
+            <div className="emojiPicker">
+              <button type="button" className="emojiBtn" onClick={() => setOpenEmoji(!openEmoji)}>
+                <EmojiSvg width="18px" height="18px" fillColor={openEmoji ? "#e9540a" : "#5e5e5e"} />
+              </button>
+              {openEmoji && 
+                <Picker 
+                  data={data} 
+                  onEmojiSelect={(emoji) => setText(() => text + emoji.native)}
+                  locale={"tr"}
+                  theme={"light"}
+                />}
+            </div>
           </div>
         </div>
-        <button className="comment-btn">Submit</button>
+        <button type="submit" className="comment-btn">Submit</button>
       </form>
     </div>
   );
@@ -202,10 +215,12 @@ function UserComments({ id, name, time, comment, likes, dislikes, replies, curre
           <div className="comment-interactions">
             <div className="comment-like-content">
               <button onClick={() => handleLikeBtn({ id: id })}>
-                <LikeSvg width="18px" height="18px" fillColor={currentUser.likes.includes(id) ? "#e9540a" : "#5e5e5e"} /> {likes}
+                <LikeSvg width="18px" height="18px" fillColor={currentUser.likes.includes(id) ? "#e9540a" : "#5e5e5e"} />
+                {likes}
               </button>
               <button onClick={() => handleDisLikeBtn({ id: id })}>
-                <DissLikeSvg width="18px" height="18px" fillColor={currentUser.dislikes.includes(id) ? "#e9540a" : "#5e5e5e"} /> {dislikes}
+                <DissLikeSvg width="18px" height="18px" fillColor={currentUser.dislikes.includes(id) ? "#e9540a" : "#5e5e5e"} />
+                {dislikes}
               </button>
             </div>
             <button>
@@ -239,10 +254,12 @@ function UserCommentReplies({ id, name, time, comment, likes, dislikes, replyToI
         <div className="comment-interactions">
           <div className="comment-like-content">
             <button onClick={() => handleLikeBtn({ id: id, replyId: replyToId })}>
-              <LikeSvg width="18px" height="18px" fillColor={currentUser.likes.includes(id) ? "#e9540a" : "#5e5e5e"} /> {likes}
+              <LikeSvg width="18px" height="18px" fillColor={currentUser.likes.includes(id) ? "#e9540a" : "#5e5e5e"} />
+              {likes}
             </button>
             <button onClick={() => handleDisLikeBtn({ id: id, replyId: replyToId })}>
-              <DissLikeSvg width="18px" height="18px" fillColor={currentUser.dislikes.includes(id) ? "#e9540a" : "#5e5e5e"} /> {dislikes}
+              <DissLikeSvg width="18px" height="18px" fillColor={currentUser.dislikes.includes(id) ? "#e9540a" : "#5e5e5e"} />
+              {dislikes}
             </button>
           </div>
           <button>
