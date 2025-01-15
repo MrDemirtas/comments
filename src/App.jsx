@@ -8,12 +8,7 @@ import { marked } from "marked";
 export default function App() {
   const dialogRef = useRef(null);
 
-  const [currentUser, setCurrentUser] = useState({
-    userId: 1,
-    name: "Furkan Demirtaş",
-    likes: [],
-    dislikes: [],
-  });
+  const [currentUser, setCurrentUser] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentReplyId, setCommentReplyId] = useState(null);
 
@@ -27,11 +22,26 @@ export default function App() {
     }else{
       getData();
     }
+
+    if (localStorage.currentUser) {
+      setCurrentUser(JSON.parse(localStorage.getItem("currentUser")));
+    }else{
+      setCurrentUser({
+        userId: 1,
+        name: "Furkan Demirtaş",
+        likes: [],
+        dislikes: [],
+      });
+    }
   }, []);
 
   useEffect(() => {
     localStorage.setItem("commentsData", JSON.stringify(comments));
   }, [comments])
+
+  useEffect(() => {
+    localStorage.setItem("currentUser", JSON.stringify(currentUser));
+  }, [currentUser])
 
   function handleLikeBtn({ id, replyId = false }) {
     if (currentUser.likes.includes(id)) {
