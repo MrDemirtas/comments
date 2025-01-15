@@ -4,6 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { marked } from "marked";
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState({
+    userId: 1,
+    name: "Furkan Demirtaş",
+    likes: [],
+    dislikes: [],
+  });
   const [comments, setComments] = useState([]);
 
   useEffect(() => {
@@ -14,9 +20,75 @@ export default function App() {
     getData();
   }, []);
 
+  function handleLikeBtn({ id, replyId = false }) {
+    if (currentUser.likes.includes(id)) {
+      currentUser.likes = currentUser.likes.filter((x) => x !== id);
+      setCurrentUser({ ...currentUser });
+      if (!replyId) {
+        comments.find((x) => x.id === id).likes--;
+      } else {
+        comments.find((x) => x.id === replyId).replies.find((x) => x.id === id).likes--;
+      }
+      setComments([...comments]);
+    } else {
+      currentUser.likes = [...currentUser.likes, id];
+      setCurrentUser({ ...currentUser });
+      
+      let thisComment = null;
+      if (!replyId) {
+        thisComment = comments[comments.findIndex((x) => x.id === id)];
+      } else {
+        thisComment = comments[comments.findIndex((x) => x.id === replyId)].replies;
+        thisComment = thisComment[thisComment.findIndex((x) => x.id === id)];
+      }
+
+      if (currentUser.dislikes.includes(id)) {
+        thisComment.dislikes--;
+        currentUser.dislikes = currentUser.dislikes.filter((x) => x !== id);
+        setCurrentUser({ ...currentUser });
+      }
+    
+      thisComment.likes++;
+      setComments([...comments]);
+    }
+  }
+
+  function handleDisLikeBtn({ id, replyId = false }) {
+    if (currentUser.dislikes.includes(id)) {
+      currentUser.dislikes = currentUser.dislikes.filter((x) => x !== id);
+      setCurrentUser({ ...currentUser });
+      if (!replyId) {
+        comments.find((x) => x.id === id).dislikes--;
+      } else {
+        comments.find((x) => x.id === replyId).replies.find((x) => x.id === id).dislikes--;
+      }
+      setComments([...comments]);
+    } else {
+      currentUser.dislikes = [...currentUser.dislikes, id];
+      setCurrentUser({ ...currentUser });
+      
+      let thisComment = null;
+      if (!replyId) {
+        thisComment = comments[comments.findIndex((x) => x.id === id)];
+      } else {
+        thisComment = comments[comments.findIndex((x) => x.id === replyId)].replies;
+        thisComment = thisComment[thisComment.findIndex((x) => x.id === id)];
+      }
+
+      if (currentUser.likes.includes(id)) {
+        thisComment.likes--;
+        currentUser.likes = currentUser.likes.filter((x) => x !== id);
+        setCurrentUser({ ...currentUser });
+      }
+    
+      thisComment.dislikes++;
+      setComments([...comments]);
+    }
+  }
+
   return (
     <div className="container">
-      <AddComment setComments={setComments} />
+      <AddComment setComments={setComments} currentUser={currentUser} />
       <hr />
       <div className="user-comments-content">
         <div className="user-comments-header">
@@ -29,25 +101,24 @@ export default function App() {
           </div>
         </div>
         {comments.map((x) => (
-          <UserComments key={x.id} {...x} />
+          <UserComments key={x.id} {...x} currentUser={currentUser} setCurrentUser={setCurrentUser} setComments={setComments} handleLikeBtn={handleLikeBtn} handleDisLikeBtn={handleDisLikeBtn} />
         ))}
       </div>
     </div>
   );
 }
 
-function AddComment({ setComments }) {
+function AddComment({ setComments, currentUser }) {
   const textAreaRef = useRef(null);
   const [text, setText] = useState("");
 
   function addTextStyle(type) {
-    
     function convertMdSyntax(selectedText) {
       const textStyles = {
         strong: `**${selectedText}**`,
         italic: `_${selectedText}_`,
-        underline: `<u>${selectedText}</u>`
-      }
+        underline: `<u>${selectedText}</u>`,
+      };
       return textStyles[type];
     }
 
@@ -58,10 +129,9 @@ function AddComment({ setComments }) {
       const beforeText = textarea.value.substring(0, textarea.selectionStart);
       const afterText = textarea.value.substring(textarea.selectionEnd);
       const newText = beforeText + convertMdSyntax(selectedText) + afterText;
-
       setText(newText);
     }
-  };
+  }
 
   function handleOnSubmit(e) {
     e.preventDefault();
@@ -69,7 +139,7 @@ function AddComment({ setComments }) {
     const formObj = Object.fromEntries(formData);
     const newCommentObj = {
       id: crypto.randomUUID(),
-      name: "Furkan Demirtaş",
+      name: currentUser.name,
       time: "now",
       comment: formObj.comment,
       likes: 0,
@@ -77,7 +147,7 @@ function AddComment({ setComments }) {
       replies: [],
     };
     setComments((comments) => [newCommentObj, ...comments]);
-    e.target.reset();
+    setText("");
   }
 
   return (
@@ -108,41 +178,45 @@ function AddComment({ setComments }) {
             </button>
           </div>
         </div>
-        <button className="comment-btn">Comment</button>
+        <button className="comment-btn">Submit</button>
       </form>
     </div>
   );
 }
 
-function UserComments({ id, name, time, comment, likes, dislikes, replies }) {
+function UserComments({ id, name, time, comment, likes, dislikes, replies, currentUser, handleLikeBtn, handleDisLikeBtn }) {
   return (
     <ul className="user-comments-body">
       <li className="comment">
-        <img src="https://avatars.githubusercontent.com/u/178329206?v=4" />
+        <a href="#">
+          <img src="https://avatars.githubusercontent.com/u/178329206?v=4" />
+        </a>
         <div className="comment-data">
           <div className="user-data">
-            <strong>{name}</strong>
+            <strong>
+              <a href="#">{name}</a>
+            </strong>
             <span>{time}</span>
           </div>
-          <div className="user-comment" dangerouslySetInnerHTML={{ __html: marked.parse(comment) }}  />
+          <div className="user-comment" dangerouslySetInnerHTML={{ __html: marked.parse(comment) }} />
           <div className="comment-interactions">
             <div className="comment-like-content">
-              <button>
-                <LikeSvg width="18px" /> {likes}
+              <button onClick={() => handleLikeBtn({ id: id })}>
+                <LikeSvg width="18px" height="18px" fillColor={currentUser.likes.includes(id) ? "#e9540a" : "#5e5e5e"} /> {likes}
               </button>
-              <button>
-                <DissLikeSvg width="18px" /> {dislikes}
+              <button onClick={() => handleDisLikeBtn({ id: id })}>
+                <DissLikeSvg width="18px" height="18px" fillColor={currentUser.dislikes.includes(id) ? "#e9540a" : "#5e5e5e"} /> {dislikes}
               </button>
             </div>
             <button>
-              <ReplySvg width="18px" />
+              <ReplySvg width="18px" height="18px" />
               Reply
             </button>
           </div>
           {replies.length !== 0 && (
             <ul className="user-comments-body">
               {replies.map((x) => (
-                <UserCommentReplies key={x.id} {...x} replyToId={id} />
+                <UserCommentReplies key={x.id} {...x} replyToId={id} currentUser={currentUser} handleLikeBtn={handleLikeBtn} handleDisLikeBtn={handleDisLikeBtn} />
               ))}
             </ul>
           )}
@@ -152,7 +226,7 @@ function UserComments({ id, name, time, comment, likes, dislikes, replies }) {
   );
 }
 
-function UserCommentReplies({ id, name, time, comment, likes, dislikes, replyToId }) {
+function UserCommentReplies({ id, name, time, comment, likes, dislikes, replyToId, currentUser, handleLikeBtn, handleDisLikeBtn }) {
   return (
     <li className="comment">
       <img src="https://avatars.githubusercontent.com/u/178329206?v=4" />
@@ -164,15 +238,15 @@ function UserCommentReplies({ id, name, time, comment, likes, dislikes, replyToI
         <p className="user-comment">{comment}</p>
         <div className="comment-interactions">
           <div className="comment-like-content">
-            <button>
-              <LikeSvg width="18px" /> {likes}
+            <button onClick={() => handleLikeBtn({ id: id, replyId: replyToId })}>
+              <LikeSvg width="18px" height="18px" fillColor={currentUser.likes.includes(id) ? "#e9540a" : "#5e5e5e"} /> {likes}
             </button>
-            <button>
-              <DissLikeSvg width="18px" /> {dislikes}
+            <button onClick={() => handleDisLikeBtn({ id: id, replyId: replyToId })}>
+              <DissLikeSvg width="18px" height="18px" fillColor={currentUser.dislikes.includes(id) ? "#e9540a" : "#5e5e5e"} /> {dislikes}
             </button>
           </div>
           <button>
-            <ReplySvg width="18px" />
+            <ReplySvg width="18px" height="18px" />
             Reply
           </button>
         </div>
