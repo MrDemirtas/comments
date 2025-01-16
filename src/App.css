@@ -117,7 +117,7 @@ button {
 .comment-data {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
   width: 100%;
 }
 
@@ -174,4 +174,43 @@ button {
       justify-self: end;
     }
   }
+}
+
+.addImageInput{ 
+  padding: 1px 6px;
+  cursor: pointer;
+  input{
+    display: none;
+  }
+  svg{
+    min-width: 18px;
+  }
+}
+
+.uploadImageContent{
+  position: relative;
+  grid-column: 1 / span 2;
+  width: 50%;
+
+  button{
+    font-size: 12px;
+    position: absolute;
+    right: -12px;
+    top: -12px;
+    padding: 4px;
+    background-color: #fff;
+    border: 1px solid #000;
+    border-radius: 50%;
+  }
+}
+
+.user-comment-content{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  img{
+    width: 30%;
+    height: 100%;
+    border-radius: 0
+  };
 }

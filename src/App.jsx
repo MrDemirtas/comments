@@ -11,7 +11,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentReplyId, setCommentReplyId] = useState(null);
-
+  
   useEffect(() => {
     async function getData() {
       const response = await fetch("/data/data.json").then((x) => x.json());
@@ -150,8 +150,10 @@ export default function App() {
 
 function AddComment({ setComments, currentUser }) {
   const textAreaRef = useRef(null);
+  const fileInputRef = useRef(null);
   const [openEmoji, setOpenEmoji] = useState(false);
   const [text, setText] = useState(""); 
+  const [imageBase64, setImageBase64] = useState(null); 
 
   function addTextStyle(type) {
     function convertMdSyntax(selectedText) {
@@ -178,6 +180,7 @@ function AddComment({ setComments, currentUser }) {
     e.preventDefault();
     const formData = new FormData(e.target);
     const formObj = Object.fromEntries(formData);
+    
     const newCommentObj = {
       id: crypto.randomUUID(),
       name: currentUser.name,
@@ -187,15 +190,48 @@ function AddComment({ setComments, currentUser }) {
       dislikes: 0,
       replies: [],
     };
+
+    if (formObj.img.name.trim() !== "" && formObj.img.size !== 0) {
+      newCommentObj.img = imageBase64;
+    }
+
     setComments((comments) => [newCommentObj, ...comments]);
     setText("");
+    fileInputRef.current.value = "";
+    setImageBase64(null);
     setOpenEmoji(false);
+  }
+
+  function handleAddImg(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        const base64String = event.target.result;
+        setImageBase64(base64String);
+      };
+      reader.readAsDataURL(file);
+    }else{
+      setImageBase64(null);
+    }
+  }
+
+  function handleRemoveImage() {
+    fileInputRef.current.value = "";
+    setImageBase64(null);
   }
 
   return (
     <div className="add-comment-content">
       <form onSubmit={handleOnSubmit}>
         <textarea ref={textAreaRef} required name="comment" value={text} onChange={(e) => setText(e.target.value)} rows="2" placeholder="add comment..."></textarea>
+        {imageBase64 && (
+          <div className="uploadImageContent">
+            <img className="uploadImage" src={imageBase64} />
+            <button type="button" onClick={handleRemoveImage}>❌</button>
+          </div>
+        )}
         <div className="comment-interactions">
           <div className="text-interactions">
             <button type="button" onClick={() => addTextStyle("strong")}>
@@ -212,9 +248,10 @@ function AddComment({ setComments, currentUser }) {
             <button type="button">
               <AttachSvg width="18px" height="18px" />
             </button>
-            <button type="button">
+            <label className="addImageInput">
+              <input ref={fileInputRef} type="file" name="img" accept=".jpeg, .jpg, .png" onChange ={handleAddImg} />
               <ImageSvg width="18px" height="18px" />
-            </button>
+            </label>
             <div className="emojiPicker">
               <button type="button" className="emojiBtn" onClick={() => setOpenEmoji(!openEmoji)}>
                 <EmojiSvg width="18px" height="18px" fillColor={openEmoji ? "#e9540a" : "#5e5e5e"} />
@@ -235,7 +272,7 @@ function AddComment({ setComments, currentUser }) {
   );
 }
 
-function UserComments({ id, name, time, comment, likes, dislikes, replies, currentUser, handleLikeBtn, handleDisLikeBtn, setCommentReplyId }) {  
+function UserComments({ id, name, time, comment, img, likes, dislikes, replies, currentUser, handleLikeBtn, handleDisLikeBtn, setCommentReplyId }) {  
   return (
     <ul className="user-comments-body">
       <li className="comment">
@@ -249,7 +286,10 @@ function UserComments({ id, name, time, comment, likes, dislikes, replies, curre
             </strong>
             <span>{time}</span>
           </div>
-          <p className="user-comment" dangerouslySetInnerHTML={{ __html: marked.parse(comment) }} />
+          <div className="user-comment-content">
+            <p className="user-comment" dangerouslySetInnerHTML={{ __html: marked.parse(comment) }} />
+            {img && <img src={img} />}
+          </div>
           <div className="comment-interactions">
             <div className="comment-like-content">
               <button onClick={() => handleLikeBtn({ id: id })}>
@@ -287,7 +327,7 @@ function UserComments({ id, name, time, comment, likes, dislikes, replies, curre
   );
 }
 
-function UserCommentReplies({ id, name, time, comment, likes, dislikes, replyToId, currentUser, handleLikeBtn, handleDisLikeBtn, setCommentReplyId }) {
+function UserCommentReplies({ id, name, time, comment, img, likes, dislikes, replyToId, currentUser, handleLikeBtn, handleDisLikeBtn, setCommentReplyId }) {
   return (
     <li className="comment">
       <img src="https://avatars.githubusercontent.com/u/178329206?v=4" />
@@ -296,7 +336,10 @@ function UserCommentReplies({ id, name, time, comment, likes, dislikes, replyToI
           <strong>{name}</strong>
           <span>{time}</span>
         </div>
-        <p className="user-comment" dangerouslySetInnerHTML={{ __html: marked.parse(comment) }} />
+        <div className="user-comment-content">
+          <p className="user-comment" dangerouslySetInnerHTML={{ __html: marked.parse(comment) }} />
+          {img && <img src={img} />}
+        </div>
         <div className="comment-interactions">
           <div className="comment-like-content">
             <button onClick={() => handleLikeBtn({ id: id, replyId: replyToId })}>
