@@ -363,8 +363,10 @@ function UserCommentReplies({ id, name, time, comment, img, likes, dislikes, rep
 
 function ReplyModal({dialogRef, replyId, setComments, setCommentReplyId, currentUser}) {
   const textAreaRef = useRef(null);
+  const fileInputRef = useRef(null);
   const [text, setText] = useState("");
   const [openEmoji, setOpenEmoji] = useState("");
+  const [imageBase64, setImageBase64] = useState(null); 
 
   function handleOnSubmit(e) {
     const formData = new FormData(e.target);
@@ -378,10 +380,16 @@ function ReplyModal({dialogRef, replyId, setComments, setCommentReplyId, current
       dislikes: 0,
     }
 
+    if (formObj.img.name.trim() !== "" && formObj.img.size !== 0) {
+      newReplyObj.img = imageBase64;
+    }
+
     setComments(comments => {
       comments[comments.findIndex(x => x.id === replyId)].replies.push(newReplyObj);
       return [...comments];
     })
+    fileInputRef.current.value = "";
+    setImageBase64(null);
     setCommentReplyId(null)
   }
 
@@ -406,11 +414,37 @@ function ReplyModal({dialogRef, replyId, setComments, setCommentReplyId, current
     }
   }
 
+  function handleAddImg(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        const base64String = event.target.result;
+        setImageBase64(base64String);
+      };
+      reader.readAsDataURL(file);
+    }else{
+      setImageBase64(null);
+    }
+  }
+
+  function handleRemoveImage() {
+    fileInputRef.current.value = "";
+    setImageBase64(null);
+  }
+
   return (
     <dialog className="replyDialog" ref={dialogRef}>
       <div className="add-comment-content">
         <form onSubmit={handleOnSubmit}>
           <textarea ref={textAreaRef} required name="comment" value={text} onChange={(e) => setText(e.target.value)} rows="2" placeholder="add comment..."></textarea>
+          {imageBase64 && (
+            <div className="uploadImageContent">
+              <img className="uploadImage" src={imageBase64} />
+              <button type="button" onClick={handleRemoveImage}>❌</button>
+            </div>
+          )}
           <div className="comment-interactions">
             <div className="text-interactions">
               <button type="button" onClick={() => addTextStyle("strong")}>
@@ -427,9 +461,10 @@ function ReplyModal({dialogRef, replyId, setComments, setCommentReplyId, current
               <button type="button">
                 <AttachSvg width="18px" height="18px" />
               </button>
-              <button type="button">
+              <label className="addImageInput">
+                <input ref={fileInputRef} type="file" name="img" accept=".jpeg, .jpg, .png" onChange ={handleAddImg} />
                 <ImageSvg width="18px" height="18px" />
-              </button>
+              </label>
               <div className="emojiPicker">
                 <button type="button" className="emojiBtn" onClick={() => setOpenEmoji(!openEmoji)}>
                   <EmojiSvg width="18px" height="18px" fillColor={openEmoji ? "#e9540a" : "#5e5e5e"} />
